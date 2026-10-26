@@ -1,62 +1,39 @@
-# Mojo Command Center
+# Mojo Command Center v2
 
-A local-first personal dashboard for trading research, marketing and PR, AI drafting, tasks and notes. Built with Streamlit, SQLite and Python. No cloud account required.
+A Streamlit + SQLite personal operations dashboard for trading research, marketing and PR analytics, media monitoring, AI-assisted drafting, tasks, projects, notes, and exports.
 
-## Features
-- **Trading Lab:** manual P/L journal, win rate, profit factor, cumulative P/L, CSV exports, EMA 9/21 + RSI(14) signal explorer on uploaded OHLC CSV.
-- **Marketing & PR:** campaign content planner, status updates and CSV exports.
-- **Media Monitor:** fetch headlines from trusted public RSS feeds on demand.
-- **AI Workspace:** ready-to-copy prompt templates and optional local Ollama generation.
-- **Productivity:** tasks, due dates and priorities.
-- **Notes & Backup:** notes and JSON data export.
+## v2 additions
+- Historical EMA/RSI backtest with configurable EMA/RSI periods, next-bar signal application, estimated transaction cost, equity curve, drawdown, return metrics, and CSV export.
+- Marketing campaign tracker with budget, spend, impressions, engagements, conversions, engagement rate, cost per conversion, and budget usage.
+- Persistent RSS coverage archive with duplicate URL prevention, search, editorial tone/status, tags, and CSV export.
+- Project tracker with owner, priority, status, progress, due date, and next action.
+- Expanded JSON backup containing all eight data tables.
+- Additive SQLite schema migration: existing tables are preserved.
 
-## Windows quick start
-1. Install Python 3.10+ from python.org.
-2. Extract the ZIP. Open PowerShell in the extracted folder.
-3. Run:
+## Deploy on Streamlit Community Cloud
+1. Download and extract `mojo-command-center-v2-upload.zip`.
+2. In GitHub, open `m-joel/mojo-command-center`.
+3. Use **Add file → Upload files** to upload `app.py`, `requirements.txt`, and `README.md` from the extracted `mojo-command-center-v2` folder.
+4. Review the changed files and commit to a new branch if the GitHub interface offers that choice. Prefer a branch named `feature/mojo-command-center-2`, then open a pull request to `main`. If branch selection is not available, create the branch first using GitHub's branch selector, then upload the files there.
+5. After review/merge, Streamlit Community Cloud should redeploy from the repository. Check app logs if dependencies or deployment fail.
 
+**Important:** the app uses a local SQLite file. Streamlit Community Cloud filesystems may be ephemeral; persistence across restarts/redeploys is not guaranteed. Keep regular exports, and consider a managed database before relying on this for important records.
+
+## Local Windows run
 ```powershell
 py -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m streamlit run app.py --server.address 127.0.0.1
+.\.venv\Scripts\python.exe -m streamlit run app.py
 ```
+Open `http://localhost:8501`.
 
-4. Open http://localhost:8501 .
+## Backtest assumptions and limits
+The backtest uses the uploaded closing-price series. EMA crossover plus RSI > 50 triggers a long position; the opposite crossover with RSI < 50 triggers a short or flat position depending on the setting. Positions are shifted one bar so signals are not applied to the same candle that created them. Costs are approximated as basis points per side on position turnover.
 
-No Docker needed. An internet connection is needed only for initial package installation, RSS fetching, and downloading Ollama/models.
+It is not a broker-grade simulator. It does not model spread, variable slippage, swaps/funding, margin, leverage, contract size, lot sizing, intrabar stops, gaps, order rejection, or instrument-specific execution. Profit factor is based on bar returns, not individual closed trades. Past results do not predict future returns. Validate data ordering and strategy rules before making decisions.
 
-## Android access
-This app runs on Windows. To access it from Android on the same trusted Wi-Fi network, run:
+## AI limitations
+Prompt-only mode works anywhere. Ollama generation only works if the Ollama endpoint is reachable from the machine/container running Streamlit. On Streamlit Community Cloud, `127.0.0.1` refers to the cloud container, not your personal computer. Do not expose Ollama publicly or paste API keys into the app.
 
-```powershell
-.\.venv\Scripts\python.exe -m streamlit run app.py --server.address 0.0.0.0
-```
-
-Find your laptop's LAN IP using `ipconfig` and open `http://LAPTOP_IP:8501` on Android. You may need to allow inbound TCP port 8501 on Windows Firewall **only on Private networks**. **There is no authentication built in**: any device able to reach that port can see and edit your data. Do not use public Wi-Fi, port forwarding, or expose this service to the internet. Prefer a private VPN with authentication for remote access. If you cannot secure the network, use Windows localhost only.
-
-The Windows computer must be powered on while Android is accessing it. Android-only installation is not part of this first version.
-
-## Optional local AI
-Install Ollama from https://ollama.com/download and run:
-
-```powershell
-ollama pull llama3.2:1b
-```
-
-Then open the AI Workspace. The app contacts Ollama at `http://127.0.0.1:11434` from the Windows host. Ollama is optional; prompt templates work without it. Local AI quality and speed depend on hardware.
-
-## CSV format for EMA/RSI explorer
-Provide at least 40 rows, with a `Close` column (case insensitive); `Date,Open,High,Low,Close` is recommended. Data must be ordered oldest to newest. The explorer shows EMA crossover signals with RSI > 50 for buys and RSI < 50 for sells **on the crossover candle**. It is **not** a profitability backtest and does not implement stops, spreads, execution or live trading. Confirm any intended trading rules before relying on signals.
-
-## Important limitations
-- Trading performance is based on manually recorded realized P/L; there is no broker integration or trade verification.
-- RSS sources are fetched on demand, not scheduled. Some feeds block automated readers.
-- The AI feature does not send data to an external AI service, but you should review the local Ollama service's settings and security before enabling LAN access.
-- Data is stored in `mojo_data.sqlite3` in the application folder. Back it up regularly. Do not commit the database, credentials, or sensitive exports to GitHub.
-- This is an MVP, not a hardened multi-user or internet-facing product.
-
-## GitHub upload
-Create a **private** repository named `mojo-command-center`, then upload `app.py`, `requirements.txt`, `README.md`, and `.gitignore` from the ZIP. Never upload `mojo_data.sqlite3`.
-
-## License
-MIT — see LICENSE.
+## Security
+This is a single-user prototype without authentication. Do not expose it directly to the public internet. Never upload `mojo_data.sqlite3`, credentials, tokens, or sensitive exports to GitHub.
